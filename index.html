@@ -3,34 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Klev's Studio Staff Login & Dashboard</title>
+<title>Klev's Studio Staff Login</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f4f4f4; }
-  #login-container { width: 320px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.15); border-top: 4px solid #c40000; }
+  #login-container {
+    width: 320px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    border-top: 4px solid #c40000;
+  }
   h2, h3 { text-align: center; color: #c40000; }
   label { display: block; margin-top: 10px; font-size: 14px; }
-  input, select, button { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
   button { font-size: 15px; cursor: pointer; }
   #loginBtn { background: #c40000; color: #fff; border: none; margin-top: 18px; }
   #addStaffBtn { background: #444; color: #fff; border: none; margin-top: 18px; }
   #logoutBtn { background: #c40000; color: #fff; border: none; padding: 8px 15px; margin-top: 10px; }
+  p { margin-top: 10px; font-size: 12px; color: #666; text-align: center; }
   #message, #addMsg { color: #c40000; font-size: 13px; text-align: center; }
   hr { margin: 20px 0; }
-
-  /* Quota dashboard */
-  #dashboard { display:none; max-width:500px; margin:20px auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
-  .quota-bar-bg { width:100%; height:25px; background:#eee; border-radius:12px; overflow:hidden; margin:10px 0;}
-  .quota-bar-fill { height:100%; width:0%; background:#4a90e2; transition: width 0.5s;}
-  .actions { margin-top:20px; }
-  .action-btn { padding:10px 20px; background:#4a90e2; color:#fff; border:none; border-radius:8px; cursor:pointer; margin:5px;}
-  .action-btn:disabled { background:#aaa; cursor:not-allowed; }
-  .status span { display:inline-block; padding:5px 10px; border-radius:5px; color:#fff;}
-  .done { background:#4caf50; } .pending { background:#f39c12; } .quota-low { background:#e74c3c; }
 </style>
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
-
 <div id="login-container">
   <h2>Klev's Studio Staff Login</h2>
 
@@ -60,8 +64,8 @@
     <select id="newRank">
       <option value="Ownership">Ownership</option>
       <option value="Management">Management</option>
-      <option value="Administrator">Administrator</option>
-      <option value="Moderator">Moderator</option>
+      <option value="Admins">Admins</option>
+      <option value="Moderators">Moderators</option>
     </select>
 
     <button id="addStaffBtn">Add Staff</button>
@@ -74,129 +78,130 @@
   </div>
 </div>
 
-<!-- Quota dashboard -->
-<div id="dashboard">
-<h2>Quota Dashboard</h2>
-<p>Role: <span id="role"></span></p>
-<p>Quota Remaining: <span id="quota"></span></p>
-<div class="quota-bar-bg"><div id="quotaBar" class="quota-bar-fill"></div></div>
-<div class="status"><span id="statusText">Loading...</span></div>
-
-<div class="actions">
-<button data-action="moderateContent" class="action-btn">Moderate Content</button>
-<button data-action="manageRoles" class="action-btn">Manage Roles</button>
-<button data-action="manageOwnership" class="action-btn">Manage Ownership</button>
-</div>
-</div>
-
 <script>
 (function() {
-  // Replace this with real server-side in future
-  const STORAGE_KEY='klev_staff_users';
-  const ADD_LOGIN_EMAIL='add.login@klev.studio';
-  const ADD_LOGIN_PASSWORD='5Z^9^^Z@XSHkplUFc2dHQZ*7V7';
-  const OWNERSHIP_EMAIL='ownership@klev.studio';
-  const OWNERSHIP_PASSWORD='suksbhkds';
-  const maxQuotas={Ownership:Infinity, Management:50, Administrator:30, Moderator:20};
-  const roleActions={
-    Ownership:['moderateContent','manageRoles','manageOwnership'],
-    Management:['moderateContent','manageRoles'],
-    Administrator:['moderateContent','manageOwnership'],
-    Moderator:['moderateContent']
-  };
+  const STORAGE_KEY = 'klev_staff_users';
+  const ADD_LOGIN_EMAIL = 'add.login@klev.studio';
+  const ADD_LOGIN_PASSWORD = '5Z^9^^Z@XSHkplUFc2dHQZ*7V7';
+  const OWNERSHIP_EMAIL = 'ownership@klev.studio';
+  const OWNERSHIP_PASSWORD = 'suksbhkds';
 
-  function getUsers(){return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}
-  function saveUsers(users){localStorage.setItem(STORAGE_KEY,JSON.stringify(users));}
-  if(!localStorage.getItem(STORAGE_KEY)){
+  function getUsers() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEY)) {
     saveUsers([
-      {email:ADD_LOGIN_EMAIL,password:ADD_LOGIN_PASSWORD,rank:'Ownership',quota:maxQuotas.Ownership,lastReset:null},
-      {email:OWNERSHIP_EMAIL,password:OWNERSHIP_PASSWORD,rank:'Ownership',quota:maxQuotas.Ownership,lastReset:null}
+      { email: ADD_LOGIN_EMAIL, password: ADD_LOGIN_PASSWORD, rank: 'Ownership' },
+      { email: OWNERSHIP_EMAIL, password: OWNERSHIP_PASSWORD, rank: 'Ownership' }
     ]);
   }
 
-  const loginBtn=document.getElementById('loginBtn');
-  const addStaffBtn=document.getElementById('addStaffBtn');
-  const logoutBtn=document.getElementById('logoutBtn');
-  const ownerSection=document.getElementById('ownerSection');
-  const logoutSection=document.getElementById('logoutSection');
-  const dashboard=document.getElementById('dashboard');
-  const roleEl=document.getElementById('role');
-  const quotaEl=document.getElementById('quota');
-  const quotaBar=document.getElementById('quotaBar');
-  const statusText=document.getElementById('statusText');
-  
-  function showOwnerSection(show){ownerSection.style.display=show?'block':'none';}
-  function showLogoutSection(show){logoutSection.style.display=show?'block':'none';}
-  function setLoggedInUser(user){sessionStorage.setItem('loggedInUser',JSON.stringify(user));}
-  function getLoggedInUser(){return JSON.parse(sessionStorage.getItem('loggedInUser')||'null');}
-  function logout(){sessionStorage.removeItem('loggedInUser');showOwnerSection(false);showLogoutSection(false);dashboard.style.display='none';document.getElementById('message').textContent='Logged out.';}
+  const loginBtn = document.getElementById('loginBtn');
+  const addStaffBtn = document.getElementById('addStaffBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
 
-  function updateDashboard(user){
-    // Weekly reset: Monday=1
-    const today=new Date();const day=today.getDay();
-    const lastReset=new Date(user.lastReset||0);
-    if(day===1 && (!user.lastReset || lastReset.getTime()<today.setHours(0,0,0,0))){
-      user.quota=maxQuotas[user.rank];
-      user.lastReset=new Date().toISOString();
-    }
-
-    roleEl.textContent=user.rank;
-    quotaEl.textContent=user.quota===Infinity?'∞':user.quota;
-    quotaBar.style.width=user.quota===Infinity?'100%':Math.min(100,(user.quota/maxQuotas[user.rank])*100)+'%';
-    statusText.textContent=user.quota<=0?'Quota exhausted!':'Quota available';
-    statusText.className=user.quota<=0?'quota-low':'pending';
-    document.querySelectorAll('.action-btn').forEach(btn=>{
-      btn.disabled=!roleActions[user.rank].includes(btn.dataset.action)||(user.quota<=0 && user.rank!=='Ownership');
-    });
+  function showOwnerSection(show) {
+    document.getElementById('ownerSection').style.display = show ? 'block' : 'none';
   }
 
-  loginBtn.onclick=function(){
-    const email=document.getElementById('email').value.trim();
-    const password=document.getElementById('password').value.trim();
-    const users=getUsers();
-    const user=users.find(u=>u.email.toLowerCase()===email.toLowerCase() && u.password===password);
-    if(!user){document.getElementById('message').textContent='Incorrect email or password!';return;}
-    setLoggedInUser(user);
-    showLogoutSection(true);
-    dashboard.style.display='block';
-    updateDashboard(user);
-    if(email.toLowerCase()===ADD_LOGIN_EMAIL.toLowerCase()) showOwnerSection(true); else showOwnerSection(false);
-    document.getElementById('email').value='';document.getElementById('password').value='';
-  };
+  function showLogoutSection(show) {
+    document.getElementById('logoutSection').style.display = show ? 'block' : 'none';
+  }
 
-  addStaffBtn.onclick=function(){
-    const currentUser=getLoggedInUser();
-    if(!currentUser || currentUser.email.toLowerCase()!==ADD_LOGIN_EMAIL.toLowerCase()){document.getElementById('addMsg').textContent='Unauthorized.'; return;}
-    const newEmail=document.getElementById('newEmail').value.trim();
-    const newPassword=document.getElementById('newPassword').value.trim();
-    const newRank=document.getElementById('newRank').value;
-    const addMsg=document.getElementById('addMsg');
-    if(!newEmail||!newPassword){addMsg.textContent='Fill email and password.'; return;}
-    if(getUsers().some(u=>u.email.toLowerCase()===newEmail.toLowerCase())){addMsg.textContent='Email already exists.';return;}
-    const users=getUsers(); users.push({email:newEmail,password:newPassword,rank:newRank,quota:maxQuotas[newRank],lastReset:null}); saveUsers(users);
-    addMsg.textContent='Staff added with rank: '+newRank;
-    document.getElementById('newEmail').value=''; document.getElementById('newPassword').value=''; document.getElementById('newRank').value='Ownership';
-  };
+  function setLoggedInUser(user) {
+    sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+  }
 
-  logoutBtn.onclick=logout;
+  function getLoggedInUser() {
+    return JSON.parse(sessionStorage.getItem('loggedInUser') || 'null');
+  }
 
-  // Action buttons reduce quota
-  document.querySelectorAll('.action-btn').forEach(btn=>{
-    btn.onclick=function(){
-      const user=getLoggedInUser();
-      if(user.rank!=='Ownership') user.quota=Math.max(0,user.quota-1);
-      const users=getUsers();
-      const index=users.findIndex(u=>u.email===user.email);
-      users[index]=user; saveUsers(users); setLoggedInUser(user); updateDashboard(user);
-      alert(`Action "${btn.dataset.action}" done! Remaining quota: ${user.quota}`);
+  function logout() {
+    sessionStorage.removeItem('loggedInUser');
+    showOwnerSection(false);
+    showLogoutSection(false);
+    document.getElementById('message').textContent = 'Logged out.';
+  }
+
+  loginBtn.onclick = function() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const message = document.getElementById('message');
+
+    const users = getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+    if (!user) {
+      message.textContent = 'Incorrect email or password!';
+      return;
     }
-  });
 
-  // Load existing login
-  const loggedIn=getLoggedInUser();
-  if(loggedIn){showLogoutSection(true);dashboard.style.display='block';updateDashboard(loggedIn);if(loggedIn.email.toLowerCase()===ADD_LOGIN_EMAIL.toLowerCase()) showOwnerSection(true);}
+    setLoggedInUser(user);
+    message.textContent = 'Logged in as ' + user.email + ' (Rank: ' + user.rank + ')';
+    showLogoutSection(true);
+
+    if (email.toLowerCase() === ADD_LOGIN_EMAIL.toLowerCase()) {
+      showOwnerSection(true);
+    } else {
+      showOwnerSection(false);
+      window.open('https://sites.google.com/view/klevs-studio-staff/home', '_blank');
+    }
+
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+  };
+
+  addStaffBtn.onclick = function() {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const newRank = document.getElementById('newRank').value;
+    const addMsg = document.getElementById('addMsg');
+
+    const currentUser = getLoggedInUser();
+    if (!currentUser || currentUser.email.toLowerCase() !== ADD_LOGIN_EMAIL.toLowerCase()) {
+      addMsg.textContent = 'Unauthorized.';
+      return;
+    }
+
+    if (!newEmail || !newPassword) {
+      addMsg.textContent = 'Please fill in email and password.';
+      return;
+    }
+
+    if (!newEmail.includes('@')) {
+      addMsg.textContent = 'Please enter a valid email.';
+      return;
+    }
+
+    let users = getUsers();
+    if (users.some(u => u.email.toLowerCase() === newEmail.toLowerCase())) {
+      addMsg.textContent = 'That email is already in the staff list.';
+      return;
+    }
+
+    users.push({ email: newEmail, password: newPassword, rank: newRank });
+    saveUsers(users);
+    addMsg.textContent = 'Staff added with rank: ' + newRank;
+
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newRank').value = 'Ownership';
+  };
+
+  logoutBtn.onclick = logout;
+
+  const loggedIn = getLoggedInUser();
+  if (loggedIn) {
+    document.getElementById('message').textContent = 'Logged in as ' + loggedIn.email + ' (Rank: ' + loggedIn.rank + ')';
+    showLogoutSection(true);
+    if (loggedIn.email.toLowerCase() === ADD_LOGIN_EMAIL.toLowerCase()) showOwnerSection(true);
+  }
 })();
 </script>
 </body>
 </html>
-
