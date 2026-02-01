@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klev's Studio Staff Login</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; }
+  #login-container {
+    width: 320px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    border-top: 4px solid #c40000;
+  }
+  h2, h3 { text-align: center; color: #c40000; }
+  label { display: block; margin-top: 10px; font-size: 14px; }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  button { font-size: 15px; cursor: pointer; }
+  #loginBtn { background: #c40000; color: #fff; border: none; margin-top: 18px; }
+  #addStaffBtn { background: #444; color: #fff; border: none; margin-top: 18px; }
+  #logoutBtn { background: #c40000; color: #fff; border: none; padding: 8px 15px; margin-top: 10px; }
+  p { margin-top: 10px; font-size: 12px; color: #666; text-align: center; }
+  #message, #addMsg { color: #c40000; font-size: 13px; text-align: center; }
+  hr { margin: 20px 0; }
+</style>
+</head>
+<body>
+<div id="login-container">
+  <h2>Klev's Studio Staff Login</h2>
+
+  <!-- LOGIN -->
+  <label for="email">Staff Email</label>
+  <input type="email" id="email" placeholder="name@example.com">
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="Enter your password">
+
+  <button id="loginBtn">Login</button>
+  <p id="message">For staff use only.</p>
+
+  <hr>
+
+  <!-- ADD STAFF (only for add.login) -->
+  <div id="ownerSection" style="display:none;">
+    <h3>Add Staff (Add Login Only)</h3>
+
+    <label for="newEmail">New Staff Email</label>
+    <input type="email" id="newEmail" placeholder="newstaff@example.com">
+
+    <label for="newPassword">New Staff Password</label>
+    <input type="password" id="newPassword" placeholder="Password">
+
+    <label for="newRank">Rank</label>
+    <select id="newRank">
+      <option value="Ownership">Ownership</option>
+      <option value="Management">Management</option>
+      <option value="Admins">Admins</option>
+      <option value="Moderators">Moderators</option>
+    </select>
+
+    <button id="addStaffBtn">Add Staff</button>
+    <p id="addMsg"></p>
+  </div>
+
+  <!-- LOGOUT -->
+  <div id="logoutSection" style="display:none;">
+    <button id="logoutBtn">Logout</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'klev_staff_users';
+  const ADD_LOGIN_EMAIL = 'add.login@klev.studio';
+  const ADD_LOGIN_PASSWORD = '5Z^9^^Z@XSHkplUFc2dHQZ*7V7';
+  const OWNERSHIP_EMAIL = 'ownership@klev.studio';
+  const OWNERSHIP_PASSWORD = 'suksbhkds';
+
+  function getUsers() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEY)) {
+    saveUsers([
+      { email: ADD_LOGIN_EMAIL, password: ADD_LOGIN_PASSWORD, rank: 'Ownership' },
+      { email: OWNERSHIP_EMAIL, password: OWNERSHIP_PASSWORD, rank: 'Ownership' }
+    ]);
+  }
+
+  const loginBtn = document.getElementById('loginBtn');
+  const addStaffBtn = document.getElementById('addStaffBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function showOwnerSection(show) {
+    document.getElementById('ownerSection').style.display = show ? 'block' : 'none';
+  }
+
+  function showLogoutSection(show) {
+    document.getElementById('logoutSection').style.display = show ? 'block' : 'none';
+  }
+
+  function setLoggedInUser(user) {
+    sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+  }
+
+  function getLoggedInUser() {
+    return JSON.parse(sessionStorage.getItem('loggedInUser') || 'null');
+  }
+
+  function logout() {
+    sessionStorage.removeItem('loggedInUser');
+    showOwnerSection(false);
+    showLogoutSection(false);
+    document.getElementById('message').textContent = 'Logged out.';
+  }
+
+  loginBtn.onclick = function() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const message = document.getElementById('message');
+
+    const users = getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+
+    if (!user) {
+      message.textContent = 'Incorrect email or password!';
+      return;
+    }
+
+    setLoggedInUser(user);
+    message.textContent = 'Logged in as ' + user.email + ' (Rank: ' + user.rank + ')';
+    showLogoutSection(true);
+
+    if (email.toLowerCase() === ADD_LOGIN_EMAIL.toLowerCase()) {
+      showOwnerSection(true);
+    } else {
+      showOwnerSection(false);
+      window.open('https://sites.google.com/view/klevs-studio-staff/home', '_blank');
+    }
+
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+  };
+
+  addStaffBtn.onclick = function() {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const newRank = document.getElementById('newRank').value;
+    const addMsg = document.getElementById('addMsg');
+
+    const currentUser = getLoggedInUser();
+    if (!currentUser || currentUser.email.toLowerCase() !== ADD_LOGIN_EMAIL.toLowerCase()) {
+      addMsg.textContent = 'Unauthorized.';
+      return;
+    }
+
+    if (!newEmail || !newPassword) {
+      addMsg.textContent = 'Please fill in email and password.';
+      return;
+    }
+
+    if (!newEmail.includes('@')) {
+      addMsg.textContent = 'Please enter a valid email.';
+      return;
+    }
+
+    let users = getUsers();
+    if (users.some(u => u.email.toLowerCase() === newEmail.toLowerCase())) {
+      addMsg.textContent = 'That email is already in the staff list.';
+      return;
+    }
+
+    users.push({ email: newEmail, password: newPassword, rank: newRank });
+    saveUsers(users);
+    addMsg.textContent = 'Staff added with rank: ' + newRank;
+
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newRank').value = 'Ownership';
+  };
+
+  logoutBtn.onclick = logout;
+
+  const loggedIn = getLoggedInUser();
+  if (loggedIn) {
+    document.getElementById('message').textContent = 'Logged in as ' + loggedIn.email + ' (Rank: ' + loggedIn.rank + ')';
+    showLogoutSection(true);
+    if (loggedIn.email.toLowerCase() === ADD_LOGIN_EMAIL.toLowerCase()) showOwnerSection(true);
+  }
+})();
+</script>
+</body>
+</html>
